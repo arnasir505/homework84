@@ -17,7 +17,7 @@ usersRouter.post('/', async (req, res, next) => {
     return res.send(user);
   } catch (error) {
     if (error instanceof mongoose.Error.ValidationError) {
-      return res.status(422).send(error);
+      return res.status(400).send(error);
     }
     if (error instanceof mongo.MongoServerError && error.code === 11000) {
       return res.status(422).send(error);
@@ -50,7 +50,7 @@ usersRouter.post('/sessions', async (req, res, next) => {
     return res.send({ message: 'Username and password correct!', user });
   } catch (error) {
     if (error instanceof mongoose.Error.ValidationError) {
-      return res.status(422).send(error);
+      return res.status(400).send(error);
     }
     next(error);
   }

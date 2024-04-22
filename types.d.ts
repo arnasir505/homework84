@@ -10,3 +10,5 @@ export interface TaskFields {
   description: string | null;
   status: string;
 }
+
+export type TaskFieldsWithoutUser = Omit<TaskFields, 'user'>;

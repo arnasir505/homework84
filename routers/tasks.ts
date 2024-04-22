@@ -1,7 +1,7 @@
 import express from 'express';
-import mongoose, { mongo } from 'mongoose';
+import mongoose from 'mongoose';
 import auth, { RequestWithUser } from '../middleware/auth';
-import { TaskFields } from '../types';
+import { TaskFields, TaskFieldsWithoutUser } from '../types';
 import Task from '../models/Task';
 
 const tasksRouter = express.Router();
@@ -9,13 +9,13 @@ const tasksRouter = express.Router();
 tasksRouter.post('/', auth, async (req: RequestWithUser, res, next) => {
   try {
     if (!req.user) {
-      return res.status(404).send({ error: 'Test error' });
+      return res.status(404).send({ error: 'User not found' });
     }
 
     const taskData: TaskFields = {
       user: req.user._id.toString(),
       title: req.body.title,
-      description: req.body.descripttion || null,
+      description: req.body.description || null,
       status: req.body.status,
     };
 
@@ -25,10 +25,46 @@ tasksRouter.post('/', auth, async (req: RequestWithUser, res, next) => {
     return res.send(task);
   } catch (error) {
     if (error instanceof mongoose.Error.ValidationError) {
-      return res.status(422).send(error);
+      return res.status(400).send(error);
     }
-    if (error instanceof mongo.MongoServerError && error.code === 11000) {
-      return res.status(422).send(error);
+    next(error);
+  }
+});
+
+tasksRouter.get('/', auth, async (req: RequestWithUser, res, next) => {
+  try {
+    const userTasks = await Task.find({ user: req.user?._id });
+    return res.send(userTasks);
+  } catch (error) {
+    next(error);
+  }
+});
+
+tasksRouter.put('/:id', auth, async (req: RequestWithUser, res, next) => {
+  try {
+    if (!req.body.title) {
+      return res.status(400).send({ error: 'Title field must be present' });
+    }
+
+    const id = req.params.id;
+
+    const taskData: TaskFieldsWithoutUser = {
+      title: req.body.title,
+      description: req.body.description || null,
+      status: req.body.status,
+    };
+
+    const updatedTask = await Task.findOneAndUpdate({_id: id, user: req.user?.id}, taskData, {new: true});
+
+    if (!updatedTask) {
+      return res.status(403).send({error: 'User can only update his tasks'});
+    }
+
+    await updatedTask.save();
+    return res.send(updatedTask);
+  } catch (error) {
+    if (error instanceof mongoose.Error.ValidationError) {
+      return res.status(400).send(error);
     }
     next(error);
   }
