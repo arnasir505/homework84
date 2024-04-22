@@ -3,8 +3,8 @@ import { HydratedDocument } from 'mongoose';
 import { UserFields } from '../types';
 import User from '../models/User';
 
-interface RequestWithUser extends Request {
-  user: HydratedDocument<UserFields>;
+export interface RequestWithUser extends Request {
+  user?: HydratedDocument<UserFields>;
 }
 
 const auth = async (
