@@ -54,10 +54,16 @@ tasksRouter.put('/:id', auth, async (req: RequestWithUser, res, next) => {
       status: req.body.status,
     };
 
-    const updatedTask = await Task.findOneAndUpdate({_id: id, user: req.user?.id}, taskData, {new: true});
+    const updatedTask = await Task.findOneAndUpdate(
+      { _id: id, user: req.user?.id },
+      taskData,
+      { new: true }
+    );
 
     if (!updatedTask) {
-      return res.status(403).send({error: 'User can only update his tasks'});
+      return res
+        .status(403)
+        .send({ error: 'Permission denied / Task not found' });
     }
 
     await updatedTask.save();
@@ -66,6 +72,26 @@ tasksRouter.put('/:id', auth, async (req: RequestWithUser, res, next) => {
     if (error instanceof mongoose.Error.ValidationError) {
       return res.status(400).send(error);
     }
+    next(error);
+  }
+});
+
+tasksRouter.delete('/:id', auth, async (req: RequestWithUser, res, next) => {
+  try {
+    const id = req.params.id;
+    const deletedTask = await Task.findOneAndDelete({
+      _id: id,
+      user: req.user?.id,
+    });
+
+    if (!deletedTask) {
+      return res
+        .status(403)
+        .send({ error: 'Permission denied / Task not found' });
+    }
+
+    return res.send(deletedTask);
+  } catch (error) {
     next(error);
   }
 });
