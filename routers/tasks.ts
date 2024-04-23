@@ -63,7 +63,7 @@ tasksRouter.put('/:id', auth, async (req: RequestWithUser, res, next) => {
     if (!updatedTask) {
       return res
         .status(403)
-        .send({ error: 'Permission denied / Task not found' });
+        .send({ error: 'Permission denied' });
     }
 
     await updatedTask.save();
@@ -87,7 +87,7 @@ tasksRouter.delete('/:id', auth, async (req: RequestWithUser, res, next) => {
     if (!deletedTask) {
       return res
         .status(403)
-        .send({ error: 'Permission denied / Task not found' });
+        .send({ error: 'Permission denied' });
     }
 
     return res.send(deletedTask);
